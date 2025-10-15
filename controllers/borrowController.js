@@ -48,17 +48,16 @@ exports.returnBook = async (req, res) => {
     const borrow = await Borrow.findById(borrowId).session(session);
     if (!borrow) {
       await session.abortTransaction();
-      return res.status(404).json({ message: 'Borrow record not found' });
+      return res.status(404).json({ message: 'please give valid borrowId' });
     }
-    if (borrow.user.toString() !== userId && req.user.role !== 'admin') {
+    if (borrow.user.toString() !== userId && borrow.book.toString() !== borrowId ) {
       await session.abortTransaction();
-      return res.status(403).json({ message: 'Not allowed to return this borrow record' });
+      return res.status(403).json({ message: 'borrowed book not found to return'});
     }
     if (borrow.returned) {
       await session.abortTransaction();
       return res.status(400).json({ message: 'Book already returned' });
     }
-
     borrow.returned = true;
     borrow.returnedAt = new Date();
     await borrow.save({ session });
